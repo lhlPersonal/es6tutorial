@@ -62,9 +62,9 @@ const dataView = new DataView(buf);
 dataView.getUint8(0) // 0
 ```
 
-上面代码对一段32字节的内存，建立`DataView`视图，然后以不带符号的8位整数格式，读取第一个元素，结果得到0，因为原始内存的`ArrayBuffer`对象，默认所有位都是0。
+上面代码对一段32字节的内存，建立`DataView`视图，然后以不带符号的8位整数格式，从头读取8位二进制数据，结果得到0，因为原始内存的`ArrayBuffer`对象，默认所有位都是0。
 
-另一种TypedArray视图，与`DataView`视图的一个区别是，它不是一个构造函数，而是一组构造函数，代表不同的数据格式。
+另一种 TypedArray 视图，与`DataView`视图的一个区别是，它不是一个构造函数，而是一组构造函数，代表不同的数据格式。
 
 ```javascript
 const buffer = new ArrayBuffer(12);
@@ -79,7 +79,7 @@ x1[0] // 2
 
 上面代码对同一段内存，分别建立两种视图：32位带符号整数（`Int32Array`构造函数）和8位不带符号整数（`Uint8Array`构造函数）。由于两个视图对应的是同一段内存，一个视图修改底层内存，会影响到另一个视图。
 
-TypedArray视图的构造函数，除了接受`ArrayBuffer`实例作为参数，还可以接受普通数组作为参数，直接分配内存生成底层的`ArrayBuffer`实例，并同时完成对这段内存的赋值。
+TypedArray 视图的构造函数，除了接受`ArrayBuffer`实例作为参数，还可以接受普通数组作为参数，直接分配内存生成底层的`ArrayBuffer`实例，并同时完成对这段内存的赋值。
 
 ```javascript
 const typedArray = new Uint8Array([0,1,2]);
@@ -273,6 +273,10 @@ const typedArray = new Uint8Array([1, 2, 3, 4]);
 TypedArray数组也可以转换回普通数组。
 
 ```javascript
+const normalArray = [...typedArray];
+// or
+const normalArray = Array.from(typedArray);
+// or
 const normalArray = Array.prototype.slice.call(typedArray);
 ```
 
@@ -443,15 +447,17 @@ Float64Array.BYTES_PER_ELEMENT // 8
 
 ### ArrayBuffer与字符串的互相转换
 
-`ArrayBuffer`转为字符串，或者字符串转为`ArrayBuffer`，有一个前提，即字符串的编码方法是确定的。假定字符串采用UTF-16编码（JavaScript的内部编码方式），可以自己编写转换函数。
+`ArrayBuffer`转为字符串，或者字符串转为`ArrayBuffer`，有一个前提，即字符串的编码方法是确定的。假定字符串采用 UTF-16 编码（JavaScript 的内部编码方式），可以自己编写转换函数。
 
 ```javascript
-// ArrayBuffer转为字符串，参数为ArrayBuffer对象
+// ArrayBuffer 转为字符串，参数为 ArrayBuffer 对象
 function ab2str(buf) {
+  // 注意，如果是大型二进制数组，为了避免溢出，
+  // 必须一个一个字符地转
   return String.fromCharCode.apply(null, new Uint16Array(buf));
 }
 
-// 字符串转为ArrayBuffer对象，参数为字符串
+// 字符串转为 ArrayBuffer 对象，参数为字符串
 function str2ab(str) {
   const buf = new ArrayBuffer(str.length * 2); // 每个字符占用2个字节
   const bufView = new Uint16Array(buf);
